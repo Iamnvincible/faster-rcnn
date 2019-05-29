@@ -136,6 +136,7 @@ class AnchorTargetCreator(object):
         img_H, img_W = img_size
 
         n_anchor = len(anchor)
+        #限定在图像内部的anchor
         inside_index = _get_inside_index(anchor, img_H, img_W)
         anchor = anchor[inside_index]
         argmax_ious, label = self._create_label(
@@ -311,12 +312,14 @@ class ProposalCreator:
         roi = loc2bbox(anchor, loc)
 
         # Clip predicted boxes to image.
+        #确保ROI的坐标在0--最大值之间
         roi[:, slice(0, 4, 2)] = np.clip(
             roi[:, slice(0, 4, 2)], 0, img_size[0])
         roi[:, slice(1, 4, 2)] = np.clip(
             roi[:, slice(1, 4, 2)], 0, img_size[1])
 
         # Remove predicted boxes with either height or width < threshold.
+        #移除过小的roi
         min_size = self.min_size * scale
         hs = roi[:, 2] - roi[:, 0]
         ws = roi[:, 3] - roi[:, 1]
@@ -326,6 +329,7 @@ class ProposalCreator:
 
         # Sort all (proposal, score) pairs by score from highest to lowest.
         # Take top pre_nms_topN (e.g. 6000).
+        #取出分类得分前n_pre_nms个roi
         order = score.ravel().argsort()[::-1]
         if n_pre_nms > 0:
             order = order[:n_pre_nms]
@@ -336,9 +340,11 @@ class ProposalCreator:
 
         # unNOTE: somthing is wrong here!
         # TODO: remove cuda.to_gpu
+        #对roi执行nms
         keep = non_maximum_suppression(
             cp.ascontiguousarray(cp.asarray(roi)),
             thresh=self.nms_thresh)
+        #取出nms后前n_post_nms个roi
         if n_post_nms > 0:
             keep = keep[:n_post_nms]
         roi = roi[keep]
