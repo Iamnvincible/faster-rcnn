@@ -120,7 +120,7 @@ class FasterRCNNTrainer(nn.Module):
         # NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
         # 将特征和ROI送入ROIhead网络，进行roi池化
-        #得到ROI部分预测的roi位置变换参数，roi分类得分
+        # 得到ROI部分预测的roi位置变换参数，roi分类得分
         roi_cls_loc, roi_score = self.faster_rcnn.head(
             features,
             sample_roi,
